@@ -73,4 +73,13 @@ class RouterApplicationTests {
 				.andExpect(status().is(405));
 	}
 
+	@Test
+	void testInvalidJsonPayload() throws Exception {
+		String payloadString = "{\"game\":\"Mobile Legends\", \"gamerID\":\"GYUTDTE\", \"points\":20}";
+		JSONObject payload = new JSONObject(payloadString);
+		this.mockMvc
+				.perform(post("/").contentType(MediaType.APPLICATION_JSON).content(payload.toString().substring(1)))
+				.andExpect(status().isOk()).andExpect(content().string(payload.toString().substring(1)));
+	}
+
 }
