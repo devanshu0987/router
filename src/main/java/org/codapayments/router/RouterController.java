@@ -1,12 +1,17 @@
 package org.codapayments.router;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.codapayments.router.config.RoutingConfig;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 public class RouterController {
+
+    @Autowired
+    private RoutingConfig routingConfig;
 
     // We should get any request and then try to pass it onto the downstream.
     // We accept any path.
