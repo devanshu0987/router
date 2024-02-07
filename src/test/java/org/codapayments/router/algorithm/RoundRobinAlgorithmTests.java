@@ -20,10 +20,10 @@ public class RoundRobinAlgorithmTests {
         config.setRoutingAlgorithm(type);
         try {
             config.setInstances(List.of(
-                    new URI("http://localhost:8081/"),
-                    new URI("http://localhost:8082/"),
-                    new URI("http://localhost:8083/"),
-                    new URI("http://localhost:8084/"))
+                    new URI("http://localhost:8081"),
+                    new URI("http://localhost:8082"),
+                    new URI("http://localhost:8083"),
+                    new URI("http://localhost:8084"))
             );
         } catch (URISyntaxException e) {
             throw new RuntimeException(e);

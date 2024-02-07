@@ -36,14 +36,14 @@ class RouterApplicationTests {
 		String payloadString = "{\"game\":\"Mobile Legends\", \"gamerID\":\"GYUTDTE\", \"points\":20}";
 		JSONObject payload = new JSONObject(payloadString);
 		this.mockMvc
-				.perform(post("/").contentType(MediaType.APPLICATION_JSON).content(payload.toString()))
-				.andExpect(status().isOk()).andExpect(content().string(payload.toString()));
+			.perform(post("/echo").contentType(MediaType.APPLICATION_JSON).content(payload.toString()))
+			.andExpect(status().isOk()).andExpect(content().string(payload.toString()));
 		this.mockMvc
 				.perform(post("/echo/abc").contentType(MediaType.APPLICATION_JSON).content(payload.toString()))
-				.andExpect(status().isOk()).andExpect(content().string(payload.toString()));
+				.andExpect(status().isNotFound());
 		this.mockMvc
 				.perform(post("/echo/abc/cde/efrgt").contentType(MediaType.APPLICATION_JSON).content(payload.toString()))
-				.andExpect(status().isOk()).andExpect(content().string(payload.toString()));
+				.andExpect(status().isNotFound());
 	}
 
 	@Test
@@ -51,14 +51,14 @@ class RouterApplicationTests {
 		String payloadString = "{\"game\":\"Mobile Legends\", \"gamerID\":\"GYUTDTE\", \"points\":20}";
 		JSONObject payload = new JSONObject(payloadString);
 		this.mockMvc
-				.perform(post("/").contentType(MediaType.APPLICATION_JSON).content(payload.toString()))
+				.perform(post("/echo").contentType(MediaType.APPLICATION_JSON).content(payload.toString()))
 				.andExpect(status().isOk()).andExpect(content().string(payload.toString()));
 		this.mockMvc
-				.perform(post("/echo/abc").contentType(MediaType.TEXT_PLAIN).content(payload.toString()))
-				.andExpect(status().isOk()).andExpect(content().string(payload.toString()));
+				.perform(post("/echo").contentType(MediaType.TEXT_PLAIN).content(payload.toString()))
+				.andExpect(status().is(415));
 		this.mockMvc
-				.perform(post("/echo/abc/cde/efrgt").contentType(MediaType.TEXT_HTML).content(payload.toString()))
-				.andExpect(status().isOk()).andExpect(content().string(payload.toString()));
+				.perform(post("/echo").contentType(MediaType.TEXT_HTML).content(payload.toString()))
+				.andExpect(status().is(415));
 	}
 
 	@Test
@@ -66,13 +66,13 @@ class RouterApplicationTests {
 		String payloadString = "{\"game\":\"Mobile Legends\", \"gamerID\":\"GYUTDTE\", \"points\":20}";
 		JSONObject payload = new JSONObject(payloadString);
 		this.mockMvc
-				.perform(post("/").contentType(MediaType.APPLICATION_JSON).content(payload.toString()))
+				.perform(post("/echo").contentType(MediaType.APPLICATION_JSON).content(payload.toString()))
 				.andExpect(status().isOk()).andExpect(content().string(payload.toString()));
 		this.mockMvc
-				.perform(get("/echo/abc").contentType(MediaType.TEXT_PLAIN).content(payload.toString()))
+				.perform(get("/echo").contentType(MediaType.TEXT_PLAIN).content(payload.toString()))
 				.andExpect(status().is(405));
 		this.mockMvc
-				.perform(put("/echo/abc/cde/efrgt").contentType(MediaType.TEXT_HTML).content(payload.toString()))
+				.perform(put("/echo").contentType(MediaType.TEXT_HTML).content(payload.toString()))
 				.andExpect(status().is(405));
 	}
 
@@ -81,8 +81,7 @@ class RouterApplicationTests {
 		String payloadString = "{\"game\":\"Mobile Legends\", \"gamerID\":\"GYUTDTE\", \"points\":20}";
 		JSONObject payload = new JSONObject(payloadString);
 		this.mockMvc
-				.perform(post("/").contentType(MediaType.APPLICATION_JSON).content(payload.toString().substring(1)))
-				.andExpect(status().isOk()).andExpect(content().string(payload.toString().substring(1)));
+				.perform(post("/echo").contentType(MediaType.APPLICATION_JSON).content(payload.toString().substring(1)))
+				.andExpect(status().is(400));
 	}
-
 }
