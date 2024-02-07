@@ -42,29 +42,26 @@ public class RouterController {
     // We accept any media type
     // TODO: How to accept any Object here. No bar on what you send?
     @PostMapping(value = "/**")
-    public ResponseEntity<?> index(HttpServletRequest request, @RequestBody String message) {
+    public ResponseEntity<?> index(HttpServletRequest req, @RequestBody String message) {
         URI redirectURI = router.route();
 
-        var part = request.getRequestURI();
-        RestClient restClient = RestClient.create(redirectURI.toString() + part);
+        var part = req.getRequestURI();
 
         // call application server
-        var requestBodySpec = restClient.post()
-                .contentType(MediaType.parseMediaType(request.getContentType()))
-                .body(message);
+        return RestClient.create().post()
+                .uri(redirectURI.toString() + part)
+                .contentType(MediaType.parseMediaType(req.getContentType()))
+                .body(message)
+                .exchange((request, response) -> {
+                    HttpHeaders headers = new HttpHeaders();
+                    // to indicate which server actually responded to us.
+                    headers.add("Location", redirectURI.toString());
 
-        // generate appropriate response.
-        var response = requestBodySpec.exchange((req, resp) -> {
-            HttpHeaders headers = new HttpHeaders();
-            // to indicate which server actually responded to us.
-            headers.add("Location", redirectURI.toString());
-
-            if (resp.getStatusCode().is2xxSuccessful()) {
-                return new ResponseEntity<>(resp.bodyTo(ObjectNode.class), headers, HttpStatus.OK);
-            } else {
-                return new ResponseEntity<>(null, headers, resp.getStatusCode());
-            }
-        });
-        return response;
+                    if (response.getStatusCode().is2xxSuccessful()) {
+                        return new ResponseEntity<>(response.bodyTo(ObjectNode.class), headers, HttpStatus.OK);
+                    } else {
+                        return new ResponseEntity<>(null, headers, response.getStatusCode());
+                    }
+                });
     }
 }
