@@ -4,6 +4,7 @@ import org.codapayments.router.algorithm.RoutingAlgorithm;
 import org.codapayments.router.config.RoutingConfig;
 
 import java.net.URI;
+import java.time.LocalDateTime;
 
 public class RandomAlgorithm implements RoutingAlgorithm {
 
@@ -13,5 +14,10 @@ public class RandomAlgorithm implements RoutingAlgorithm {
     @Override
     public URI route() {
         return null;
+    }
+
+    @Override
+    public void setCooldown(URI uri, LocalDateTime time) {
+        // No op.
     }
 }

@@ -13,6 +13,9 @@ public class RoutingAlgorithmFactory {
             case RANDOM -> {
                 return new RandomAlgorithm(config);
             }
+            case ROUND_ROBIN_COOLDOWN -> {
+                return new RoundRobinWithCoolDownAlgorithm(config);
+            }
             default -> throw new IllegalArgumentException("Algorithm not implemented");
         }
     }

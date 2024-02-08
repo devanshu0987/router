@@ -24,6 +24,16 @@ public class RoutingConfig {
     @NotEmpty
     private List<URI> instances = new ArrayList<>();
 
+    public Integer getTimeoutInSeconds() {
+        return timeoutInSeconds;
+    }
+
+    public void setTimeoutInSeconds(Integer timeoutInMinutes) {
+        this.timeoutInSeconds = timeoutInMinutes;
+    }
+
+    private Integer timeoutInSeconds;
+
     public RoutingAlgorithmType getRoutingAlgorithm() {
         return routingAlgorithm;
     }
