@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 public class AverageStatistics implements Statistics {
     private Double sum = 0D;
     private Double count = 0D;
+
     @Override
     public void addData(LocalDateTime timestamp, Double value) {
         sum += value;
@@ -13,6 +14,8 @@ public class AverageStatistics implements Statistics {
 
     @Override
     public Double getData() {
-        return sum / count;
+        if (count > 0)
+            return sum / count;
+        return 0D;
     }
 }

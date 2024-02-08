@@ -1,6 +1,11 @@
 package org.codapayments.router;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.util.JSONPObject;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
 import org.codapayments.router.algorithm.RoutingAlgorithm;
@@ -10,10 +15,12 @@ import org.codapayments.router.statistics.MetricStatistics;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -39,8 +46,9 @@ public class RouterController {
     public void initialize() {
         logger.info(routingConfig.toString());
         router = RoutingAlgorithmFactory.getAlgorithm(routingConfig);
-        latencyMetric = new MetricStatistics("AVERAGE" ,routingConfig);
-        errorCountMetric = new MetricStatistics("COUNT" ,routingConfig);
+        latencyMetric = new MetricStatistics("AVERAGE", routingConfig);
+        errorCountMetric = new MetricStatistics("COUNT", routingConfig);
+        successCountMetric = new MetricStatistics("COUNT", routingConfig);
     }
 
     // We should get any request and then try to pass it onto the downstream.
@@ -72,6 +80,7 @@ public class RouterController {
                     .body(message)
                     .exchange((request, response) -> {
                         if (response.getStatusCode().is2xxSuccessful()) {
+                            successCountMetric.addData(redirectURI, LocalDateTime.now(), 1D);
                             latencyMetric.addData(redirectURI, LocalDateTime.now(), System.currentTimeMillis() - beforeTime.doubleValue());
                             return new ResponseEntity<>(response.bodyTo(ObjectNode.class), headers, HttpStatus.OK);
                         } else {
@@ -84,6 +93,30 @@ public class RouterController {
         }
 
         return new ResponseEntity<>(null, headers, HttpStatus.SERVICE_UNAVAILABLE);
+    }
+
+    @GetMapping(value = "/statistics")
+    public ObjectNode statistics() {
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode rootNode = mapper.createObjectNode();
+        ArrayNode successArray = mapper.createArrayNode();
+        ArrayNode errorArray = mapper.createArrayNode();
+        ArrayNode latencyArray = mapper.createArrayNode();
+
+        for (var item : routingConfig.getInstances()) {
+            successArray.add(item + " " + successCountMetric.getStatistic(item));
+        }
+        for (var item : routingConfig.getInstances()) {
+            errorArray.add(item + " " + errorCountMetric.getStatistic(item));
+        }
+        for (var item : routingConfig.getInstances()) {
+            latencyArray.add(item + " " + latencyMetric.getStatistic(item));
+        }
+        rootNode.put("SUCCESS_COUNT", successArray);
+        rootNode.put("ERROR_COUNT", errorArray);
+        rootNode.put("LATENCY", latencyArray);
+
+        return rootNode;
     }
 
     private void setCoolDown(URI uri) {
