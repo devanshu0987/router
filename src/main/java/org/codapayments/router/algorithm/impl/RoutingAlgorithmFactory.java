@@ -13,6 +13,9 @@ public class RoutingAlgorithmFactory {
             case RANDOM -> {
                 return new RandomAlgorithm(config);
             }
+            case LEAST_CONNECTED -> {
+                return new LeastConnectedAlgorithm(config);
+            }
             default -> throw new IllegalArgumentException("Algorithm not implemented");
         }
     }

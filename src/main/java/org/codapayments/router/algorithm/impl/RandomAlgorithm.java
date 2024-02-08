@@ -14,4 +14,14 @@ public class RandomAlgorithm implements RoutingAlgorithm {
     public URI route() {
         return null;
     }
+
+    @Override
+    public void beginConnection(URI uri) {
+
+    }
+
+    @Override
+    public void endConnection(URI uri) {
+
+    }
 }

@@ -30,4 +30,14 @@ public class RoundRobinAlgorithm implements RoutingAlgorithm {
 
         return instanceToRouteTo;
     }
+
+    @Override
+    public void beginConnection(URI uri) {
+
+    }
+
+    @Override
+    public void endConnection(URI uri) {
+
+    }
 }

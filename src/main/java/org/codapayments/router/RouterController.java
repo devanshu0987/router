@@ -48,11 +48,15 @@ public class RouterController {
         var part = req.getRequestURI();
 
         // call application server
+        router.beginConnection(redirectURI);
         return RestClient.create().post()
                 .uri(redirectURI.toString() + part)
                 .contentType(MediaType.parseMediaType(req.getContentType()))
                 .body(message)
                 .exchange((request, response) -> {
+                    // The response is closed after the exchange function has been invoked
+                    router.endConnection(redirectURI);
+
                     HttpHeaders headers = new HttpHeaders();
                     // to indicate which server actually responded to us.
                     headers.add("Location", redirectURI.toString());
