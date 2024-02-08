@@ -7,14 +7,28 @@ import java.time.LocalDateTime;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-public abstract class MetricStatistics {
-    public MetricStatistics() {
+public class MetricStatistics {
+    private ConcurrentMap<URI, Statistics> data;
+    private String metricType;
+
+    public MetricStatistics(String type, RoutingConfig config) {
         data = new ConcurrentHashMap<>();
+        metricType = type;
+        for (var uri : config.getInstances()) {
+            data.put(uri, StatisticsFactory.getStatisticInstance(metricType));
+        }
     }
 
-    protected ConcurrentMap<URI, Statistics> data;
-
-    public abstract void addData(URI uri, LocalDateTime timestamp, Double value);
+    public void addData(URI uri, LocalDateTime timestamp, Double value) {
+        data.compute(uri, (k, v) -> {
+            if (v == null) {
+                return StatisticsFactory.getStatisticInstance(metricType);
+            } else {
+                v.addData(timestamp, value);
+            }
+            return v;
+        });
+    }
 
     public Double getStatistic(URI uri) {
         if (data.containsKey(uri)) {
