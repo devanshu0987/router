@@ -56,8 +56,9 @@ public class RouterController {
                     HttpHeaders headers = new HttpHeaders();
                     // to indicate which server actually responded to us.
                     headers.add("Location", redirectURI.toString());
+                    boolean status = response.getStatusCode().is2xxSuccessful();
 
-                    if (response.getStatusCode().is2xxSuccessful()) {
+                    if (status) {
                         return new ResponseEntity<>(response.bodyTo(ObjectNode.class), headers, HttpStatus.OK);
                     } else {
                         return new ResponseEntity<>(null, headers, response.getStatusCode());
