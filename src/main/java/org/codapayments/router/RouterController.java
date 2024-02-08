@@ -18,8 +18,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientException;
 
+import java.net.SocketException;
 import java.net.URI;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 
 @RestController
 public class RouterController {
@@ -44,24 +48,40 @@ public class RouterController {
     @PostMapping(value = "/**")
     public ResponseEntity<?> index(HttpServletRequest req, @RequestBody String message) {
         URI redirectURI = router.route();
-
         var part = req.getRequestURI();
+        HttpHeaders headers = new HttpHeaders();
+        // to indicate which server actually responded to us.
+        headers.add("Location", redirectURI.toString());
 
         // call application server
-        return RestClient.create().post()
-                .uri(redirectURI.toString() + part)
-                .contentType(MediaType.parseMediaType(req.getContentType()))
-                .body(message)
-                .exchange((request, response) -> {
-                    HttpHeaders headers = new HttpHeaders();
-                    // to indicate which server actually responded to us.
-                    headers.add("Location", redirectURI.toString());
+        try {
+            return RestClient.create().post()
+                    .uri(redirectURI.toString() + part)
+                    .contentType(MediaType.parseMediaType(req.getContentType()))
+                    .body(message)
+                    .exchange((request, response) -> {
+                        if (response.getStatusCode().is2xxSuccessful()) {
+                            return new ResponseEntity<>(response.bodyTo(ObjectNode.class), headers, HttpStatus.OK);
+                        } else {
+                            return new ResponseEntity<>(null, headers, response.getStatusCode());
+                        }
+                    });
+        } catch (RestClientException ex) {
+            if (ex.getCause() instanceof SocketException) {
+                setCoolDown(redirectURI);
+                return new ResponseEntity<>(null, headers, HttpStatus.SERVICE_UNAVAILABLE);
+            } else {
+                setCoolDown(redirectURI);
+            }
+        } catch (Exception ex) {
+            setCoolDown(redirectURI);
+        }
 
-                    if (response.getStatusCode().is2xxSuccessful()) {
-                        return new ResponseEntity<>(response.bodyTo(ObjectNode.class), headers, HttpStatus.OK);
-                    } else {
-                        return new ResponseEntity<>(null, headers, response.getStatusCode());
-                    }
-                });
+        return new ResponseEntity<>(null, headers, HttpStatus.SERVICE_UNAVAILABLE);
+    }
+
+    private void setCoolDown(URI uri) {
+        router.setCooldown(
+                uri, LocalDateTime.now().plus(routingConfig.getTimeoutInSeconds(), ChronoUnit.SECONDS));
     }
 }
