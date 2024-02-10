@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestTemplate;
 
@@ -85,7 +86,12 @@ public class RouterController {
                 latencyMetric.addData(redirectURI, System.currentTimeMillis(), System.currentTimeMillis() - beforeTime.doubleValue());
             }
             return resp;
-        } catch (Exception ex) {
+        } catch (HttpClientErrorException ex) {
+            // 4xx: Bad Request, Unauth, Not Found.
+            // Client error: Do not increment error count.
+            return new ResponseEntity<>(null, headers, ex.getStatusCode());
+        }
+        catch (Exception ex) {
             errorCountMetric.addData(redirectURI, System.currentTimeMillis(), 1D);
         }
 
