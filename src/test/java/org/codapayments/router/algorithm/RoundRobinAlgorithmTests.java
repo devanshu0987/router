@@ -22,7 +22,7 @@ public class RoundRobinAlgorithmTests {
         RoutingConfig config = new RoutingConfig();
         config.setRoutingAlgorithm(type);
         config.setSupplierType(ServiceInstanceListSupplierType.STATIC);
-        config.setTimeoutInSeconds(5);
+        config.setCooldownTimeoutInSeconds(5);
         try {
             config.setInstances(List.of(
                     new URI("http://localhost:8081"),
