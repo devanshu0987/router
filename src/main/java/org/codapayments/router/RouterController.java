@@ -46,9 +46,12 @@ public class RouterController {
     public void initialize() {
         logger.info(routingConfig.toString());
         router = RoutingAlgorithmFactory.getAlgorithm(routingConfig);
-        latencyMetric = new MetricStatistics("AVERAGE", routingConfig);
-        errorCountMetric = new MetricStatistics("COUNT", routingConfig);
-        successCountMetric = new MetricStatistics("COUNT", routingConfig);
+//        latencyMetric = new MetricStatistics("AVERAGE", routingConfig);
+//        errorCountMetric = new MetricStatistics("COUNT", routingConfig);
+//        successCountMetric = new MetricStatistics("COUNT", routingConfig);
+        latencyMetric = new MetricStatistics("SLIDING_WINDOW_AVERAGE", routingConfig);
+        errorCountMetric = new MetricStatistics("SLIDING_WINDOW_COUNT", routingConfig);
+        successCountMetric = new MetricStatistics("SLIDING_WINDOW_COUNT", routingConfig);
     }
 
     // We should get any request and then try to pass it onto the downstream.
@@ -80,16 +83,16 @@ public class RouterController {
                     .body(message)
                     .exchange((request, response) -> {
                         if (response.getStatusCode().is2xxSuccessful()) {
-                            successCountMetric.addData(redirectURI, LocalDateTime.now(), 1D);
-                            latencyMetric.addData(redirectURI, LocalDateTime.now(), System.currentTimeMillis() - beforeTime.doubleValue());
+                            // successCountMetric.addData(redirectURI, System.currentTimeMillis(), 1D);
+                            latencyMetric.addData(redirectURI, System.currentTimeMillis(), System.currentTimeMillis() - beforeTime.doubleValue());
                             return new ResponseEntity<>(response.bodyTo(ObjectNode.class), headers, HttpStatus.OK);
                         } else {
-                            latencyMetric.addData(redirectURI, LocalDateTime.now(), System.currentTimeMillis() - beforeTime.doubleValue());
+                            latencyMetric.addData(redirectURI, System.currentTimeMillis(), System.currentTimeMillis() - beforeTime.doubleValue());
                             return new ResponseEntity<>(null, headers, response.getStatusCode());
                         }
                     });
         } catch (Exception ex) {
-            errorCountMetric.addData(redirectURI, LocalDateTime.now(), 1D);
+            errorCountMetric.addData(redirectURI, System.currentTimeMillis(), 1D);
         }
 
         return new ResponseEntity<>(null, headers, HttpStatus.SERVICE_UNAVAILABLE);
