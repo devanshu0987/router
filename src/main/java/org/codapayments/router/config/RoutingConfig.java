@@ -25,7 +25,46 @@ public class RoutingConfig {
     @NotNull
     @NotEmpty
     private List<URI> instances = new ArrayList<>();
-    private Integer timeoutInSeconds;
+
+    private Integer cooldownTimeoutInSeconds = 0;
+    // To what extent the error count should go to warrant a cooldown.
+    private Integer errorCountForCooldown = Integer.MAX_VALUE;
+    // To what extent the latency should go to warrant a cooldown.
+    private Integer latencyForCooldownInSeconds = Integer.MAX_VALUE;
+
+    public Integer getErrorCountForCooldown() {
+        return errorCountForCooldown;
+    }
+
+    public void setErrorCountForCooldown(Integer errorCountForCooldown) {
+        this.errorCountForCooldown = errorCountForCooldown;
+    }
+
+    public Integer getLatencyForCooldownInSeconds() {
+        return latencyForCooldownInSeconds;
+    }
+
+    public void setLatencyForCooldownInSeconds(Integer latencyForCooldownInSeconds) {
+        this.latencyForCooldownInSeconds = latencyForCooldownInSeconds;
+    }
+
+    public Integer getMetricsWindowSizeInSeconds() {
+        return metricsWindowSizeInSeconds;
+    }
+
+    public void setMetricsWindowSizeInSeconds(Integer metricsWindowSizeInSeconds) {
+        this.metricsWindowSizeInSeconds = metricsWindowSizeInSeconds;
+    }
+
+    private Integer metricsWindowSizeInSeconds;
+
+    public Integer getCooldownTimeoutInSeconds() {
+        return cooldownTimeoutInSeconds;
+    }
+
+    public void setCooldownTimeoutInSeconds(Integer cooldownTimeoutInSeconds) {
+        this.cooldownTimeoutInSeconds = cooldownTimeoutInSeconds;
+    }
 
     public ServiceInstanceListSupplierType getSupplierType() {
         return supplierType;
@@ -33,14 +72,6 @@ public class RoutingConfig {
 
     public void setSupplierType(ServiceInstanceListSupplierType supplierType) {
         this.supplierType = supplierType;
-    }
-
-    public Integer getTimeoutInSeconds() {
-        return timeoutInSeconds;
-    }
-
-    public void setTimeoutInSeconds(Integer timeoutInMinutes) {
-        this.timeoutInSeconds = timeoutInMinutes;
     }
 
     public RoutingAlgorithmType getRoutingAlgorithm() {

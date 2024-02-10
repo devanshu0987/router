@@ -59,7 +59,8 @@ public class RouterController {
         URI redirectURI = router.route(supplier);
 
         // check if high error count.
-        if (errorCountMetric.getStatistic(redirectURI) > 5 || latencyMetric.getStatistic(redirectURI) > 1000) {
+        if (errorCountMetric.getStatistic(redirectURI) > routingConfig.getErrorCountForCooldown()
+                || latencyMetric.getStatistic(redirectURI) > 1000 * routingConfig.getLatencyForCooldownInSeconds()) {
             // take the instance out for timeout configured in the config.
             setCoolDown(redirectURI);
         }
@@ -118,6 +119,6 @@ public class RouterController {
     }
 
     private void setCoolDown(URI uri) {
-        supplier.setCooldown(uri, System.currentTimeMillis() + (routingConfig.getTimeoutInSeconds() * 1000));
+        supplier.setCooldown(uri, System.currentTimeMillis() + (routingConfig.getCooldownTimeoutInSeconds() * 1000));
     }
 }
