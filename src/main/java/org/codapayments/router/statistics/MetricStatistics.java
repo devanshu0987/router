@@ -11,19 +11,21 @@ import java.util.concurrent.ConcurrentMap;
 public class MetricStatistics {
     private ConcurrentMap<URI, Statistics> data;
     private StatisticType metricType;
+    private RoutingConfig config;
 
     public MetricStatistics(StatisticType type, RoutingConfig config) {
         data = new ConcurrentHashMap<>();
         metricType = type;
+        this.config = config;
         for (var uri : config.getInstances()) {
-            data.put(uri, StatisticsFactory.getInstance(type));
+            data.put(uri, StatisticsFactory.getInstance(metricType, config));
         }
     }
 
     public void addData(URI uri, Long timestamp, Double value) {
         data.compute(uri, (k, v) -> {
             if (v == null) {
-                return StatisticsFactory.getInstance(metricType);
+                return StatisticsFactory.getInstance(metricType, config);
             } else {
                 v.addData(new DataPoint(timestamp, value));
             }
