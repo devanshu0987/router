@@ -15,15 +15,14 @@ import org.codapayments.router.statistics.MetricStatistics;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestTemplate;
 
 import java.net.URI;
 import java.util.concurrent.atomic.AtomicLong;
@@ -33,6 +32,10 @@ public class RouterController {
 
     @Autowired
     private RoutingConfig routingConfig;
+
+    @Autowired
+    private RestTemplate restTemplate;
+
     private static final Logger logger = LoggerFactory.getLogger(RouterController.class);
     private RoutingAlgorithm router;
     private ServiceInstanceListSupplier supplier;
@@ -55,7 +58,7 @@ public class RouterController {
     // We accept any media type
     // TODO: How to accept any Object here. No bar on what you send?
     @PostMapping(value = "/**")
-    public ResponseEntity<?> index(HttpServletRequest req, @RequestBody String message) {
+    public ResponseEntity<?> index(RequestEntity<ObjectNode> req) {
         URI redirectURI = router.route(supplier);
 
         // check if high error count.
@@ -65,7 +68,7 @@ public class RouterController {
             setCoolDown(redirectURI);
         }
 
-        var part = req.getRequestURI();
+        var part = req.getUrl().getRawPath();
         HttpHeaders headers = new HttpHeaders();
         // to indicate which server actually responded to us.
         headers.add("Location", redirectURI.toString());
@@ -73,20 +76,15 @@ public class RouterController {
         // call application server
         try {
             AtomicLong beforeTime = new AtomicLong(System.currentTimeMillis());
-            return RestClient.create().post()
-                    .uri(redirectURI.toString() + part)
-                    .contentType(MediaType.parseMediaType(req.getContentType()))
-                    .body(message)
-                    .exchange((request, response) -> {
-                        if (response.getStatusCode().is2xxSuccessful()) {
-                            successCountMetric.addData(redirectURI, System.currentTimeMillis(), 1D);
-                            latencyMetric.addData(redirectURI, System.currentTimeMillis(), System.currentTimeMillis() - beforeTime.doubleValue());
-                            return new ResponseEntity<>(response.bodyTo(ObjectNode.class), headers, HttpStatus.OK);
-                        } else {
-                            latencyMetric.addData(redirectURI, System.currentTimeMillis(), System.currentTimeMillis() - beforeTime.doubleValue());
-                            return new ResponseEntity<>(null, headers, response.getStatusCode());
-                        }
-                    });
+            HttpEntity<ObjectNode> request = new HttpEntity<>(req.getBody());
+            ResponseEntity<ObjectNode> resp = restTemplate.postForEntity(redirectURI.toString() + part, request, ObjectNode.class);
+            if (resp.getStatusCode().is2xxSuccessful()) {
+                successCountMetric.addData(redirectURI, System.currentTimeMillis(), 1D);
+                latencyMetric.addData(redirectURI, System.currentTimeMillis(), System.currentTimeMillis() - beforeTime.doubleValue());
+            } else {
+                latencyMetric.addData(redirectURI, System.currentTimeMillis(), System.currentTimeMillis() - beforeTime.doubleValue());
+            }
+            return resp;
         } catch (Exception ex) {
             errorCountMetric.addData(redirectURI, System.currentTimeMillis(), 1D);
         }
