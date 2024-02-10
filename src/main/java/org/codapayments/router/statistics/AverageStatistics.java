@@ -7,9 +7,9 @@ public class AverageStatistics implements Statistics {
     private Double count = 0D;
 
     @Override
-    public void addData(LocalDateTime timestamp, Double value) {
-        sum += value;
-        count++;
+    public void addData(DataPoint dataPoint) {
+        sum += dataPoint.getValue();
+        count += dataPoint.getValue();
     }
 
     @Override

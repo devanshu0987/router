@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 public class CountStatistics implements Statistics {
     private Double count = 0D;
     @Override
-    public void addData(LocalDateTime timestamp, Double value) {
+    public void addData(DataPoint dataPoint) {
         count += 1;
     }
 
