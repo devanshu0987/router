@@ -3,6 +3,7 @@ package org.codapayments.router.config;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import org.codapayments.router.enums.RoutingAlgorithmType;
+import org.codapayments.router.enums.ServiceInstanceListSupplierType;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
@@ -19,10 +20,20 @@ public class RoutingConfig {
 
     @NotNull
     private RoutingAlgorithmType routingAlgorithm;
-
+    @NotNull
+    private ServiceInstanceListSupplierType supplierType;
     @NotNull
     @NotEmpty
     private List<URI> instances = new ArrayList<>();
+    private Integer timeoutInSeconds;
+
+    public ServiceInstanceListSupplierType getSupplierType() {
+        return supplierType;
+    }
+
+    public void setSupplierType(ServiceInstanceListSupplierType supplierType) {
+        this.supplierType = supplierType;
+    }
 
     public Integer getTimeoutInSeconds() {
         return timeoutInSeconds;
@@ -31,8 +42,6 @@ public class RoutingConfig {
     public void setTimeoutInSeconds(Integer timeoutInMinutes) {
         this.timeoutInSeconds = timeoutInMinutes;
     }
-
-    private Integer timeoutInSeconds;
 
     public RoutingAlgorithmType getRoutingAlgorithm() {
         return routingAlgorithm;

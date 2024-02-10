@@ -1,21 +1,20 @@
 package org.codapayments.router;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.util.JSONPObject;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
 import org.codapayments.router.algorithm.RoutingAlgorithm;
 import org.codapayments.router.algorithm.impl.RoutingAlgorithmFactory;
 import org.codapayments.router.config.RoutingConfig;
+import org.codapayments.router.enums.StatisticType;
+import org.codapayments.router.instanceListSupplier.ServiceInstanceListSupplier;
+import org.codapayments.router.instanceListSupplier.impl.ServiceInstanceListSupplierFactory;
 import org.codapayments.router.statistics.MetricStatistics;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.env.Environment;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -27,8 +26,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestClient;
 
 import java.net.URI;
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 @RestController
@@ -38,6 +35,7 @@ public class RouterController {
     private RoutingConfig routingConfig;
     private static final Logger logger = LoggerFactory.getLogger(RouterController.class);
     private RoutingAlgorithm router;
+    private ServiceInstanceListSupplier supplier;
     private MetricStatistics latencyMetric;
     private MetricStatistics successCountMetric;
     private MetricStatistics errorCountMetric;
@@ -45,13 +43,11 @@ public class RouterController {
     @PostConstruct
     public void initialize() {
         logger.info(routingConfig.toString());
-        router = RoutingAlgorithmFactory.getAlgorithm(routingConfig);
-//        latencyMetric = new MetricStatistics("AVERAGE", routingConfig);
-//        errorCountMetric = new MetricStatistics("COUNT", routingConfig);
-//        successCountMetric = new MetricStatistics("COUNT", routingConfig);
-        latencyMetric = new MetricStatistics("SLIDING_WINDOW_AVERAGE", routingConfig);
-        errorCountMetric = new MetricStatistics("SLIDING_WINDOW_COUNT", routingConfig);
-        successCountMetric = new MetricStatistics("SLIDING_WINDOW_COUNT", routingConfig);
+        router = RoutingAlgorithmFactory.getInstance(routingConfig);
+        supplier = ServiceInstanceListSupplierFactory.getInstance(routingConfig);
+        latencyMetric = new MetricStatistics(StatisticType.SLIDING_WINDOW_AVERAGE, routingConfig);
+        errorCountMetric = new MetricStatistics(StatisticType.SLIDING_WINDOW_COUNT, routingConfig);
+        successCountMetric = new MetricStatistics(StatisticType.SLIDING_WINDOW_COUNT, routingConfig);
     }
 
     // We should get any request and then try to pass it onto the downstream.
@@ -60,10 +56,9 @@ public class RouterController {
     // TODO: How to accept any Object here. No bar on what you send?
     @PostMapping(value = "/**")
     public ResponseEntity<?> index(HttpServletRequest req, @RequestBody String message) {
-        URI redirectURI = router.route();
+        URI redirectURI = router.route(supplier);
 
         // check if high error count.
-        // Todo: Implement Sliding window statistic for this.
         if (errorCountMetric.getStatistic(redirectURI) > 5 || latencyMetric.getStatistic(redirectURI) > 1000) {
             // take the instance out for timeout configured in the config.
             setCoolDown(redirectURI);
@@ -83,7 +78,7 @@ public class RouterController {
                     .body(message)
                     .exchange((request, response) -> {
                         if (response.getStatusCode().is2xxSuccessful()) {
-                            // successCountMetric.addData(redirectURI, System.currentTimeMillis(), 1D);
+                            successCountMetric.addData(redirectURI, System.currentTimeMillis(), 1D);
                             latencyMetric.addData(redirectURI, System.currentTimeMillis(), System.currentTimeMillis() - beforeTime.doubleValue());
                             return new ResponseEntity<>(response.bodyTo(ObjectNode.class), headers, HttpStatus.OK);
                         } else {
@@ -123,7 +118,6 @@ public class RouterController {
     }
 
     private void setCoolDown(URI uri) {
-        router.setCooldown(
-                uri, LocalDateTime.now().plus(routingConfig.getTimeoutInSeconds(), ChronoUnit.SECONDS));
+        supplier.setCooldown(uri, System.currentTimeMillis() + (routingConfig.getTimeoutInSeconds() * 1000));
     }
 }

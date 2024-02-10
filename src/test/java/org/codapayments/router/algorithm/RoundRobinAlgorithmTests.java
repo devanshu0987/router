@@ -3,6 +3,9 @@ package org.codapayments.router.algorithm;
 import org.codapayments.router.algorithm.impl.RoutingAlgorithmFactory;
 import org.codapayments.router.config.RoutingConfig;
 import org.codapayments.router.enums.RoutingAlgorithmType;
+import org.codapayments.router.enums.ServiceInstanceListSupplierType;
+import org.codapayments.router.instanceListSupplier.ServiceInstanceListSupplier;
+import org.codapayments.router.instanceListSupplier.impl.ServiceInstanceListSupplierFactory;
 import org.junit.jupiter.api.Test;
 
 import java.net.URI;
@@ -18,6 +21,8 @@ public class RoundRobinAlgorithmTests {
     private RoutingConfig getRoutingConfig(RoutingAlgorithmType type) {
         RoutingConfig config = new RoutingConfig();
         config.setRoutingAlgorithm(type);
+        config.setSupplierType(ServiceInstanceListSupplierType.STATIC);
+        config.setTimeoutInSeconds(5);
         try {
             config.setInstances(List.of(
                     new URI("http://localhost:8081"),
@@ -34,18 +39,20 @@ public class RoundRobinAlgorithmTests {
     @Test
     public void testHappyPath() {
         var config = getRoutingConfig(RoutingAlgorithmType.ROUND_ROBIN);
-        RoutingAlgorithm router = RoutingAlgorithmFactory.getAlgorithm(config);
-        assert config.getInstances().get(0) == router.route();
-        assert config.getInstances().get(1) == router.route();
-        assert config.getInstances().get(2) == router.route();
-        assert config.getInstances().get(3) == router.route();
-        assert config.getInstances().get(0) == router.route();
+        RoutingAlgorithm router = RoutingAlgorithmFactory.getInstance(config);
+        ServiceInstanceListSupplier supplier = ServiceInstanceListSupplierFactory.getInstance(config);
+        assert config.getInstances().get(0) == router.route(supplier);
+        assert config.getInstances().get(1) == router.route(supplier);
+        assert config.getInstances().get(2) == router.route(supplier);
+        assert config.getInstances().get(3) == router.route(supplier);
+        assert config.getInstances().get(0) == router.route(supplier);
     }
 
     @Test
     public void testConcurrentRequests() throws ExecutionException, InterruptedException {
         var config = getRoutingConfig(RoutingAlgorithmType.ROUND_ROBIN);
-        RoutingAlgorithm router = RoutingAlgorithmFactory.getAlgorithm(config);
+        RoutingAlgorithm router = RoutingAlgorithmFactory.getInstance(config);
+        ServiceInstanceListSupplier supplier = ServiceInstanceListSupplierFactory.getInstance(config);
         ExecutorService executor = (ExecutorService) Executors.newFixedThreadPool(10);
 
         int numberOfTasks = config.getInstances().size() * 200;
@@ -54,7 +61,7 @@ public class RoundRobinAlgorithmTests {
 
 
         for (int index = 0; index < numberOfTasks; index++) {
-            callables.add(new RouterCallable(router));
+            callables.add(new RouterCallable(router, supplier));
         }
 
         // ACT
@@ -78,7 +85,7 @@ public class RoundRobinAlgorithmTests {
         }
 
         // All frequencies should be same and equal to numberOfTasks / size.
-        for(var item : resultFrequency.entrySet()) {
+        for (var item : resultFrequency.entrySet()) {
             assert item.getValue() == numberOfTasks / config.getInstances().size();
         }
     }

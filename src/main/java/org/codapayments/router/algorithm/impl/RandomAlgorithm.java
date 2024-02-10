@@ -2,22 +2,22 @@ package org.codapayments.router.algorithm.impl;
 
 import org.codapayments.router.algorithm.RoutingAlgorithm;
 import org.codapayments.router.config.RoutingConfig;
+import org.codapayments.router.instanceListSupplier.ServiceInstanceListSupplier;
 
 import java.net.URI;
 import java.time.LocalDateTime;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class RandomAlgorithm implements RoutingAlgorithm {
 
-    public RandomAlgorithm(RoutingConfig config) {
-        assert config.getInstances() != null && !config.getInstances().isEmpty();
-    }
-    @Override
-    public URI route() {
-        return null;
+    public RandomAlgorithm() {
+
     }
 
     @Override
-    public void setCooldown(URI uri, LocalDateTime time) {
-        // No op.
+    public URI route(ServiceInstanceListSupplier supplier) {
+        int index = ThreadLocalRandom.current().nextInt(supplier.get().size());
+
+        return supplier.get().get(index);
     }
 }

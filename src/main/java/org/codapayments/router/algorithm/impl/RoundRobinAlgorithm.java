@@ -2,6 +2,7 @@ package org.codapayments.router.algorithm.impl;
 
 import org.codapayments.router.algorithm.RoutingAlgorithm;
 import org.codapayments.router.config.RoutingConfig;
+import org.codapayments.router.instanceListSupplier.ServiceInstanceListSupplier;
 
 import java.net.URI;
 import java.time.LocalDateTime;
@@ -9,31 +10,25 @@ import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class RoundRobinAlgorithm implements RoutingAlgorithm {
-    private List<URI> uriList;
     private int presentIndex;
 
     ReentrantLock lock = new ReentrantLock();
 
-    public RoundRobinAlgorithm(RoutingConfig config) {
-        uriList = config.getInstances();
+    public RoundRobinAlgorithm() {
         presentIndex = 0;
     }
 
     @Override
-    public URI route() {
+    public URI route(ServiceInstanceListSupplier supplier) {
         lock.lock();
 
-        URI instanceToRouteTo = uriList.get(presentIndex % uriList.size());
+        int size = supplier.get().size();
+        URI instanceToRouteTo = supplier.get().get(presentIndex % size);
         presentIndex++;
-        presentIndex = presentIndex % uriList.size();
+        presentIndex = presentIndex % size;
 
         lock.unlock();
 
         return instanceToRouteTo;
-    }
-
-    @Override
-    public void setCooldown(URI uri, LocalDateTime time) {
-        // No op.
     }
 }
