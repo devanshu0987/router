@@ -16,8 +16,15 @@ public class RandomAlgorithm implements RoutingAlgorithm {
 
     @Override
     public URI route(ServiceInstanceListSupplier supplier) {
-        int index = ThreadLocalRandom.current().nextInt(supplier.get().size());
+        // Todo: Is it possible that the underlying list changes in between calls, if we allow for updates?
+        var instanceList = supplier.get();
+        int size = instanceList.size();
 
-        return supplier.get().get(index);
+        if(size == 0) {
+            return null;
+        }
+        int index = ThreadLocalRandom.current().nextInt(size);
+
+        return instanceList.get(index);
     }
 }
