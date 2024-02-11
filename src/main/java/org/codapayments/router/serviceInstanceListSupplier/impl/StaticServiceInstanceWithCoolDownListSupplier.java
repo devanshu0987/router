@@ -21,9 +21,4 @@ public class StaticServiceInstanceWithCoolDownListSupplier implements ServiceIns
         var filteredList = uriList.stream().filter(x -> circuitBreakerService.isCircuitClosed(x));
         return filteredList.toList();
     }
-
-    @Override
-    public void add(URI uri) {
-
-    }
 }

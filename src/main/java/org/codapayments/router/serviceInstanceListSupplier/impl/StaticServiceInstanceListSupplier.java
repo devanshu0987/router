@@ -17,9 +17,4 @@ public class StaticServiceInstanceListSupplier implements ServiceInstanceListSup
     public List<URI> get() {
         return uriList;
     }
-
-    @Override
-    public void add(URI uri) {
-
-    }
 }
