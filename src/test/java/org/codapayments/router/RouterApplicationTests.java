@@ -14,9 +14,12 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.test.web.client.ExpectedCount;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MockMvcBuilder;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.context.WebApplicationContext;
 
 import java.net.URI;
 
@@ -35,29 +38,29 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class RouterApplicationTests {
 
     @Autowired
-    private MockMvc mockMvc;
+    private WebApplicationContext wac;
 
     @Autowired
     private RestTemplate restTemplate;
 
-    private MockRestServiceServer mockServer;
-
-    @BeforeEach
-    public void setUp() {
-        // mockServer = MockRestServiceServer.createServer(restTemplate);
-    }
-
     @Test
     void testHappyPath() throws Exception {
+        var mockMvc = MockMvcBuilders.webAppContextSetup(wac).build();
+        RouterController controller = mockMvc.getDispatcherServlet().getWebApplicationContext().getBean(RouterController.class);
+        controller.initialize();
         var mockServer = MockRestServiceServer.createServer(restTemplate);
+
         String payloadString = "{\"game\":\"Mobile Legends\", \"gamerID\":\"GYUTDTE\", \"points\":20}";
         JSONObject payload = new JSONObject(payloadString);
         mockServer.expect(ExpectedCount.once(), requestTo(new URI("http://localhost:8081/echo"))).andExpect(method(HttpMethod.POST)).andRespond(withStatus(HttpStatus.OK).contentType(MediaType.APPLICATION_JSON).body(payload.toString()));
-        this.mockMvc.perform(post("/echo").contentType(MediaType.APPLICATION_JSON).content(payload.toString())).andExpect(status().isOk()).andExpect(content().string(payload.toString()));
+        mockMvc.perform(post("/echo").contentType(MediaType.APPLICATION_JSON).content(payload.toString())).andExpect(status().isOk()).andExpect(content().string(payload.toString()));
     }
 
     @Test
     void testAnyUrl() throws Exception {
+        var mockMvc = MockMvcBuilders.webAppContextSetup(wac).build();
+        RouterController controller = mockMvc.getDispatcherServlet().getWebApplicationContext().getBean(RouterController.class);
+        controller.initialize();
         var mockServer = MockRestServiceServer.createServer(restTemplate);
 
         String payloadString = "{\"game\":\"Mobile Legends\", \"gamerID\":\"GYUTDTE\", \"points\":20}";
@@ -65,13 +68,16 @@ class RouterApplicationTests {
         mockServer.expect(ExpectedCount.once(), requestTo(new URI("http://localhost:8081/echo"))).andExpect(method(HttpMethod.POST)).andRespond(withStatus(HttpStatus.OK).contentType(MediaType.APPLICATION_JSON).body(payload.toString()));
         mockServer.expect(ExpectedCount.once(), requestTo(new URI("http://localhost:8082/echo/abc"))).andExpect(method(HttpMethod.POST)).andRespond(withStatus(HttpStatus.NOT_FOUND));
         mockServer.expect(ExpectedCount.once(), requestTo(new URI("http://localhost:8083/echo/abc/cde/efrgt"))).andExpect(method(HttpMethod.POST)).andRespond(withStatus(HttpStatus.NOT_FOUND));
-        this.mockMvc.perform(post("/echo").contentType(MediaType.APPLICATION_JSON).content(payload.toString())).andExpect(status().isOk()).andExpect(content().string(payload.toString()));
-        this.mockMvc.perform(post("/echo/abc").contentType(MediaType.APPLICATION_JSON).content(payload.toString())).andExpect(status().isNotFound());
-        this.mockMvc.perform(post("/echo/abc/cde/efrgt").contentType(MediaType.APPLICATION_JSON).content(payload.toString())).andExpect(status().isNotFound());
+        mockMvc.perform(post("/echo").contentType(MediaType.APPLICATION_JSON).content(payload.toString())).andExpect(status().isOk()).andExpect(content().string(payload.toString()));
+        mockMvc.perform(post("/echo/abc").contentType(MediaType.APPLICATION_JSON).content(payload.toString())).andExpect(status().isNotFound());
+        mockMvc.perform(post("/echo/abc/cde/efrgt").contentType(MediaType.APPLICATION_JSON).content(payload.toString())).andExpect(status().isNotFound());
     }
 
     @Test
     void testAnyMediaType() throws Exception {
+        var mockMvc = MockMvcBuilders.webAppContextSetup(wac).build();
+        RouterController controller = mockMvc.getDispatcherServlet().getWebApplicationContext().getBean(RouterController.class);
+        controller.initialize();
         var mockServer = MockRestServiceServer.createServer(restTemplate);
 
         String payloadString = "{\"game\":\"Mobile Legends\", \"gamerID\":\"GYUTDTE\", \"points\":20}";
@@ -79,13 +85,16 @@ class RouterApplicationTests {
 
         mockServer.expect(ExpectedCount.once(), requestTo(new URI("http://localhost:8081/echo"))).andExpect(method(HttpMethod.POST)).andRespond(withStatus(HttpStatus.OK).contentType(MediaType.APPLICATION_JSON).body(payload.toString()));
 
-        this.mockMvc.perform(post("/echo").contentType(MediaType.APPLICATION_JSON).content(payload.toString())).andExpect(status().isOk()).andExpect(content().string(payload.toString()));
-        this.mockMvc.perform(post("/echo").contentType(MediaType.TEXT_PLAIN).content(payload.toString())).andExpect(result -> assertTrue(result.getResolvedException() instanceof HttpMediaTypeNotSupportedException));
-        this.mockMvc.perform(post("/echo").contentType(MediaType.TEXT_HTML).content(payload.toString())).andExpect(result -> assertTrue(result.getResolvedException() instanceof HttpMediaTypeNotSupportedException));
+        mockMvc.perform(post("/echo").contentType(MediaType.APPLICATION_JSON).content(payload.toString())).andExpect(status().isOk()).andExpect(content().string(payload.toString()));
+        mockMvc.perform(post("/echo").contentType(MediaType.TEXT_PLAIN).content(payload.toString())).andExpect(result -> assertTrue(result.getResolvedException() instanceof HttpMediaTypeNotSupportedException));
+        mockMvc.perform(post("/echo").contentType(MediaType.TEXT_HTML).content(payload.toString())).andExpect(result -> assertTrue(result.getResolvedException() instanceof HttpMediaTypeNotSupportedException));
     }
 
     @Test
     void testOnlyPostAllowed() throws Exception {
+        var mockMvc = MockMvcBuilders.webAppContextSetup(wac).build();
+        RouterController controller = mockMvc.getDispatcherServlet().getWebApplicationContext().getBean(RouterController.class);
+        controller.initialize();
         var mockServer = MockRestServiceServer.createServer(restTemplate);
 
         String payloadString = "{\"game\":\"Mobile Legends\", \"gamerID\":\"GYUTDTE\", \"points\":20}";
@@ -93,22 +102,25 @@ class RouterApplicationTests {
 
         mockServer.expect(ExpectedCount.once(), requestTo(new URI("http://localhost:8081/echo"))).andExpect(method(HttpMethod.POST)).andRespond(withStatus(HttpStatus.OK).contentType(MediaType.APPLICATION_JSON).body(payload.toString()));
 
-        this.mockMvc.perform(post("/echo").contentType(MediaType.APPLICATION_JSON).content(payload.toString())).andExpect(status().isOk()).andExpect(content().string(payload.toString()));
-        this.mockMvc.perform(get("/echo").contentType(MediaType.APPLICATION_JSON).content(payload.toString())).andExpect(result -> {
+        mockMvc.perform(post("/echo").contentType(MediaType.APPLICATION_JSON).content(payload.toString())).andExpect(status().isOk()).andExpect(content().string(payload.toString()));
+        mockMvc.perform(get("/echo").contentType(MediaType.APPLICATION_JSON).content(payload.toString())).andExpect(result -> {
             assertTrue(result.getResolvedException() instanceof HttpRequestMethodNotSupportedException);
         });
-        this.mockMvc.perform(put("/echo").contentType(MediaType.APPLICATION_JSON).content(payload.toString())).andExpect(result -> {
+        mockMvc.perform(put("/echo").contentType(MediaType.APPLICATION_JSON).content(payload.toString())).andExpect(result -> {
             assertTrue(result.getResolvedException() instanceof HttpRequestMethodNotSupportedException);
         });
     }
 
     @Test
     void testInvalidJsonPayload() throws Exception {
+        var mockMvc = MockMvcBuilders.webAppContextSetup(wac).build();
+        RouterController controller = mockMvc.getDispatcherServlet().getWebApplicationContext().getBean(RouterController.class);
+        controller.initialize();
         var mockServer = MockRestServiceServer.createServer(restTemplate);
 
         String payloadString = "{\"game\":\"Mobile Legends\", \"gamerID\":\"GYUTDTE\", \"points\":20}";
         JSONObject payload = new JSONObject(payloadString);
-        this.mockMvc.perform(post("/echo").contentType(MediaType.APPLICATION_JSON).content(payload.toString().substring(1))).andExpect(result -> {
+        mockMvc.perform(post("/echo").contentType(MediaType.APPLICATION_JSON).content(payload.toString().substring(1))).andExpect(result -> {
             assertTrue(result.getResolvedException() instanceof HttpMessageNotReadableException);
         });
     }
