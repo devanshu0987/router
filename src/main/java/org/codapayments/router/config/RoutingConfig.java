@@ -3,7 +3,7 @@ package org.codapayments.router.config;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import org.codapayments.router.algorithm.RoutingAlgorithmType;
-import org.codapayments.router.instanceListSupplier.ServiceInstanceListSupplierType;
+import org.codapayments.router.serviceInstanceListSupplier.ServiceInstanceListSupplierType;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
@@ -28,10 +28,10 @@ public class RoutingConfig {
 
     private Integer cooldownTimeoutInSeconds = 0;
     // To what extent the error count should go to warrant a cooldown.
-    private Integer errorCountForCooldown = Integer.MAX_VALUE;
+    private Integer errorCountForCooldown = (int) 1e5;
     // To what extent the latency should go to warrant a cooldown.
-    private Integer latencyForCooldownInSeconds = Integer.MAX_VALUE;
-    private Integer metricsWindowSizeInSeconds = Integer.MAX_VALUE;
+    private Integer latencyForCooldownInSeconds = 1000;
+    private Integer metricsWindowSizeInSeconds = 1000;
 
     public Integer getErrorCountForCooldown() {
         return errorCountForCooldown;

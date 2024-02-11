@@ -1,6 +1,6 @@
 package org.codapayments.router.algorithm;
 
-import org.codapayments.router.instanceListSupplier.ServiceInstanceListSupplier;
+import org.codapayments.router.serviceInstanceListSupplier.ServiceInstanceListSupplier;
 
 import java.net.URI;
 

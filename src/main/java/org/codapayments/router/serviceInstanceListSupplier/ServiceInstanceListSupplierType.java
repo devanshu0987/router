@@ -1,4 +1,4 @@
-package org.codapayments.router.instanceListSupplier;
+package org.codapayments.router.serviceInstanceListSupplier;
 
 public enum ServiceInstanceListSupplierType {
     STATIC,

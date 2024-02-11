@@ -4,8 +4,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.codapayments.router.algorithm.RoutingAlgorithm;
 import org.codapayments.router.algorithm.impl.RoutingAlgorithmFactory;
 import org.codapayments.router.config.RoutingConfig;
-import org.codapayments.router.instanceListSupplier.ServiceInstanceListSupplier;
-import org.codapayments.router.instanceListSupplier.impl.ServiceInstanceListSupplierFactory;
+import org.codapayments.router.serviceInstanceListSupplier.ServiceInstanceListSupplier;
+import org.codapayments.router.serviceInstanceListSupplier.impl.ServiceInstanceListSupplierFactory;
 import org.codapayments.router.statistics.MetricType;
 import org.springframework.http.*;
 import org.springframework.web.client.HttpClientErrorException;
@@ -14,7 +14,6 @@ import org.springframework.web.client.RestTemplate;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.concurrent.atomic.AtomicLong;
 
 public class RoutingService {
 
