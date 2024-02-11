@@ -16,6 +16,6 @@ public class RouterCallable implements Callable<URI> {
 
     @Override
     public URI call() throws Exception {
-        return router.route(supplier);
+        return router.chooseServiceInstance(supplier);
     }
 }

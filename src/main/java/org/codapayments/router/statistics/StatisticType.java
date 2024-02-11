@@ -1,4 +1,4 @@
-package org.codapayments.router.enums;
+package org.codapayments.router.statistics;
 
 public enum StatisticType {
     COUNT,
