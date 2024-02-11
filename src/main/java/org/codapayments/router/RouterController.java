@@ -75,6 +75,7 @@ public class RouterController {
         }
 
         var part = req.getUrl().getRawPath();
+        var query = req.getUrl().getQuery() == null ? "": "?" + req.getUrl().getQuery();
         HttpHeaders headers = new HttpHeaders();
         // to indicate which server actually responded to us.
         headers.add("Location", redirectURI.toString());
@@ -83,14 +84,13 @@ public class RouterController {
         try {
             AtomicLong beforeTime = new AtomicLong(System.currentTimeMillis());
             HttpEntity<ObjectNode> request = new HttpEntity<>(req.getBody());
-            ResponseEntity<ObjectNode> resp = restTemplate.postForEntity(redirectURI.toString() + part, request, ObjectNode.class);
+            ResponseEntity<ObjectNode> resp = restTemplate.postForEntity(redirectURI.toString() + part + query, request, ObjectNode.class);
             if (resp.getStatusCode().is2xxSuccessful()) {
                 successCountMetric.addData(redirectURI, System.currentTimeMillis(), 1D);
-                latencyMetric.addData(redirectURI, System.currentTimeMillis(), System.currentTimeMillis() - beforeTime.doubleValue());
-            } else {
-                latencyMetric.addData(redirectURI, System.currentTimeMillis(), System.currentTimeMillis() - beforeTime.doubleValue());
             }
-            return resp;
+            latencyMetric.addData(redirectURI, System.currentTimeMillis(), System.currentTimeMillis() - beforeTime.doubleValue());
+            headers.addAll(resp.getHeaders());
+            return new ResponseEntity<>(resp.getBody(), headers, HttpStatus.OK);
         } catch (HttpClientErrorException ex) {
             // 4xx: Bad Request, Un-Authorized, Not Found.
             // Client error: Do not increment error count.
