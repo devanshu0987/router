@@ -66,12 +66,17 @@ public class RouterController {
     @PostMapping(value = "/**")
     public ResponseEntity<?> index(RequestEntity<ObjectNode> req) {
         URI redirectURI = router.route(supplier);
+        // No routes are available.
+        if(redirectURI == null) {
+            return new ResponseEntity<>(null, null, HttpStatus.SERVICE_UNAVAILABLE);
+        }
 
         // check if high error count.
         if (errorCountMetric.getStatistic(redirectURI) > routingConfig.getErrorCountForCooldown()
                 || latencyMetric.getStatistic(redirectURI) > 1000 * routingConfig.getLatencyForCooldownInSeconds()) {
             // take the instance out for timeout configured in the config.
             setCoolDown(redirectURI);
+            return new ResponseEntity<>(null, null, HttpStatus.SERVICE_UNAVAILABLE);
         }
 
         var part = req.getUrl().getRawPath();
