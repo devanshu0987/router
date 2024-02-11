@@ -19,21 +19,16 @@ import org.springframework.web.client.RestTemplate;
 
 @RestController
 public class RouterController {
-
     @Autowired
     private RoutingConfig routingConfig;
-
     @Autowired
     private RestTemplate restTemplate;
-
     private static final Logger logger = LoggerFactory.getLogger(RouterController.class);
-
     private RoutingService routingService;
     private MetricService metricService;
 
     @PostConstruct
     public void initialize() {
-        logger.info(routingConfig.toString());
         metricService = new MetricService(routingConfig);
         routingService = new RoutingService(routingConfig, metricService);
     }

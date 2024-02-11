@@ -14,6 +14,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Objects;
 
 public class RoutingService {
 
@@ -39,17 +40,18 @@ public class RoutingService {
             return new ResponseEntity<>(null, null, HttpStatus.SERVICE_UNAVAILABLE);
         }
 
-        if (!circuitBreakerService.isCircuitClosed(redirectURI)) {
-            // Todo: Either we just return OR we retry. For now, just return.
-            return new ResponseEntity<>(null, null, HttpStatus.SERVICE_UNAVAILABLE);
-        }
-
-        URI downstreamURI = prepareDownstreamURI(req, redirectURI);
         HttpHeaders headers = new HttpHeaders();
         headers.add("Location", redirectURI.toString());
 
+        if (!circuitBreakerService.isCircuitClosed(redirectURI)) {
+            // Todo: Either we just return OR we retry. For now, just return.
+            return new ResponseEntity<>(null, headers, HttpStatus.SERVICE_UNAVAILABLE);
+        }
+
+        URI downstreamURI = prepareDownstreamURI(req, redirectURI);
+        long beforeTime = System.currentTimeMillis();
+
         try {
-            long beforeTime = System.currentTimeMillis();
             HttpEntity<ObjectNode> downstreamRequest = new HttpEntity<>(req.getBody());
             ResponseEntity<ObjectNode> resp = restTemplate.postForEntity(downstreamURI, downstreamRequest, ObjectNode.class);
             HttpHeaders responseHeaders = prepareResponseHeaders(resp, headers);

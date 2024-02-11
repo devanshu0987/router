@@ -139,7 +139,6 @@ class RouterControllerTests {
         mockServer.expect(ExpectedCount.once(), requestTo(new URI("http://localhost:8082/echo"))).andExpect(method(HttpMethod.POST)).andRespond(withStatus(HttpStatus.GATEWAY_TIMEOUT));
         mockServer.expect(ExpectedCount.once(), requestTo(new URI("http://localhost:8083/echo"))).andExpect(method(HttpMethod.POST)).andRespond(withException(new IOException()));
 
-
         mockMvc.perform(post("/echo").contentType(MediaType.APPLICATION_JSON).content(payload.toString())).andExpect(status().is(500));
         mockMvc.perform(post("/echo").contentType(MediaType.APPLICATION_JSON).content(payload.toString())).andExpect(status().is(504));
         mockMvc.perform(post("/echo").contentType(MediaType.APPLICATION_JSON).content(payload.toString())).andExpect(status().is(503));

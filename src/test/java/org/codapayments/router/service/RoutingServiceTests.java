@@ -74,4 +74,5 @@ public class RoutingServiceTests {
 
         assert response.getStatusCode().is2xxSuccessful();
     }
+
 }
