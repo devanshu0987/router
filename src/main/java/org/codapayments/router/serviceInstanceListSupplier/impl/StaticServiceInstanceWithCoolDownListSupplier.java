@@ -1,13 +1,11 @@
-package org.codapayments.router.instanceListSupplier.impl;
+package org.codapayments.router.serviceInstanceListSupplier.impl;
 
 import org.codapayments.router.config.RoutingConfig;
-import org.codapayments.router.instanceListSupplier.ServiceInstanceListSupplier;
+import org.codapayments.router.serviceInstanceListSupplier.ServiceInstanceListSupplier;
 import org.codapayments.router.service.CircuitBreakerService;
 
 import java.net.URI;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 public class StaticServiceInstanceWithCoolDownListSupplier implements ServiceInstanceListSupplier {
     private List<URI> uriList;

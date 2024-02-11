@@ -1,7 +1,7 @@
-package org.codapayments.router.instanceListSupplier.impl;
+package org.codapayments.router.serviceInstanceListSupplier.impl;
 
 import org.codapayments.router.config.RoutingConfig;
-import org.codapayments.router.instanceListSupplier.ServiceInstanceListSupplier;
+import org.codapayments.router.serviceInstanceListSupplier.ServiceInstanceListSupplier;
 import org.codapayments.router.service.CircuitBreakerService;
 
 public class ServiceInstanceListSupplierFactory {

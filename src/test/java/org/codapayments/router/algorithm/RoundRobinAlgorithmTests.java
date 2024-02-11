@@ -2,9 +2,9 @@ package org.codapayments.router.algorithm;
 
 import org.codapayments.router.algorithm.impl.RoutingAlgorithmFactory;
 import org.codapayments.router.config.RoutingConfig;
-import org.codapayments.router.instanceListSupplier.ServiceInstanceListSupplierType;
-import org.codapayments.router.instanceListSupplier.ServiceInstanceListSupplier;
-import org.codapayments.router.instanceListSupplier.impl.ServiceInstanceListSupplierFactory;
+import org.codapayments.router.serviceInstanceListSupplier.ServiceInstanceListSupplierType;
+import org.codapayments.router.serviceInstanceListSupplier.ServiceInstanceListSupplier;
+import org.codapayments.router.serviceInstanceListSupplier.impl.ServiceInstanceListSupplierFactory;
 import org.codapayments.router.service.CircuitBreakerService;
 import org.codapayments.router.service.MetricService;
 import org.junit.jupiter.api.Test;

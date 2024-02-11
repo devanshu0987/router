@@ -1,7 +1,7 @@
 package org.codapayments.router.algorithm.impl;
 
 import org.codapayments.router.algorithm.RoutingAlgorithm;
-import org.codapayments.router.instanceListSupplier.ServiceInstanceListSupplier;
+import org.codapayments.router.serviceInstanceListSupplier.ServiceInstanceListSupplier;
 
 import java.net.URI;
 import java.util.concurrent.locks.ReentrantLock;
