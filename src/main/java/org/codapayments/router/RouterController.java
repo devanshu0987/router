@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestTemplate;
 
@@ -91,10 +92,14 @@ public class RouterController {
             }
             return resp;
         } catch (HttpClientErrorException ex) {
-            // 4xx: Bad Request, Unauth, Not Found.
+            // 4xx: Bad Request, Un-Authorized, Not Found.
             // Client error: Do not increment error count.
             return new ResponseEntity<>(null, headers, ex.getStatusCode());
-        } catch (Exception ex) {
+        } catch (HttpServerErrorException ex) {
+            errorCountMetric.addData(redirectURI, System.currentTimeMillis(), 1D);
+            return new ResponseEntity<>(null, headers, ex.getStatusCode());
+        }
+        catch (Exception ex) {
             errorCountMetric.addData(redirectURI, System.currentTimeMillis(), 1D);
         }
 
