@@ -44,6 +44,10 @@ public class RouterController {
     private MetricStatistics successCountMetric;
     private MetricStatistics errorCountMetric;
 
+    public RouterController() {
+        // logger.info("From the controller" + routingConfig.toString());
+    }
+
     @PostConstruct
     public void initialize() {
         logger.info(routingConfig.toString());
@@ -90,8 +94,7 @@ public class RouterController {
             // 4xx: Bad Request, Unauth, Not Found.
             // Client error: Do not increment error count.
             return new ResponseEntity<>(null, headers, ex.getStatusCode());
-        }
-        catch (Exception ex) {
+        } catch (Exception ex) {
             errorCountMetric.addData(redirectURI, System.currentTimeMillis(), 1D);
         }
 
