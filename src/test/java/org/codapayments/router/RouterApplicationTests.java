@@ -21,11 +21,13 @@ import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.context.WebApplicationContext;
 
+import java.io.IOException;
 import java.net.URI;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.withException;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withStatus;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -123,5 +125,24 @@ class RouterApplicationTests {
         mockMvc.perform(post("/echo").contentType(MediaType.APPLICATION_JSON).content(payload.toString().substring(1))).andExpect(result -> {
             assertTrue(result.getResolvedException() instanceof HttpMessageNotReadableException);
         });
+    }
+
+    @Test
+    void testDifferentHttpStatusCodes() throws Exception {
+        var mockMvc = MockMvcBuilders.webAppContextSetup(wac).build();
+        RouterController controller = mockMvc.getDispatcherServlet().getWebApplicationContext().getBean(RouterController.class);
+        controller.initialize();
+        var mockServer = MockRestServiceServer.createServer(restTemplate);
+
+        String payloadString = "{\"game\":\"Mobile Legends\", \"gamerID\":\"GYUTDTE\", \"points\":20}";
+        JSONObject payload = new JSONObject(payloadString);
+        mockServer.expect(ExpectedCount.once(), requestTo(new URI("http://localhost:8081/echo"))).andExpect(method(HttpMethod.POST)).andRespond(withStatus(HttpStatus.INTERNAL_SERVER_ERROR));
+        mockServer.expect(ExpectedCount.once(), requestTo(new URI("http://localhost:8082/echo"))).andExpect(method(HttpMethod.POST)).andRespond(withStatus(HttpStatus.GATEWAY_TIMEOUT));
+        mockServer.expect(ExpectedCount.once(), requestTo(new URI("http://localhost:8083/echo"))).andExpect(method(HttpMethod.POST)).andRespond(withException(new IOException()));
+
+
+        mockMvc.perform(post("/echo").contentType(MediaType.APPLICATION_JSON).content(payload.toString())).andExpect(status().is(500));
+        mockMvc.perform(post("/echo").contentType(MediaType.APPLICATION_JSON).content(payload.toString())).andExpect(status().is(504));
+        mockMvc.perform(post("/echo").contentType(MediaType.APPLICATION_JSON).content(payload.toString())).andExpect(status().is(503));
     }
 }
