@@ -16,7 +16,7 @@ public class RoundRobinAlgorithm implements RoutingAlgorithm {
     }
 
     @Override
-    public URI route(ServiceInstanceListSupplier supplier) {
+    public URI chooseServiceInstance(ServiceInstanceListSupplier supplier) {
         lock.lock();
         // Todo: Is it possible that the underlying list changes in between calls, if we allow for updates?
         var instanceList = supplier.get();

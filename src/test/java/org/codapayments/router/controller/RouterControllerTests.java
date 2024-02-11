@@ -1,6 +1,7 @@
-package org.codapayments.router;
+package org.codapayments.router.controller;
 
 import org.codapayments.router.config.RoutingConfig;
+import org.codapayments.router.controller.RouterController;
 import org.json.JSONObject;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,8 +14,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.test.web.client.ExpectedCount;
 import org.springframework.test.web.client.MockRestServiceServer;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MockMvcBuilder;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
@@ -37,7 +36,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @EnableConfigurationProperties(RoutingConfig.class)
 @TestMethodOrder(MethodOrderer.DisplayName.class)
-class RouterApplicationTests {
+class RouterControllerTests {
 
     @Autowired
     private WebApplicationContext wac;

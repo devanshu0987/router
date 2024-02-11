@@ -1,7 +1,6 @@
 package org.codapayments.router.statistics;
 
 import org.codapayments.router.config.RoutingConfig;
-import org.codapayments.router.enums.StatisticType;
 
 public class StatisticsFactory {
     // Todo: Make the window size configurable.

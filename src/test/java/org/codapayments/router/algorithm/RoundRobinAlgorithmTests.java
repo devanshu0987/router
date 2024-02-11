@@ -2,10 +2,11 @@ package org.codapayments.router.algorithm;
 
 import org.codapayments.router.algorithm.impl.RoutingAlgorithmFactory;
 import org.codapayments.router.config.RoutingConfig;
-import org.codapayments.router.enums.RoutingAlgorithmType;
-import org.codapayments.router.enums.ServiceInstanceListSupplierType;
+import org.codapayments.router.instanceListSupplier.ServiceInstanceListSupplierType;
 import org.codapayments.router.instanceListSupplier.ServiceInstanceListSupplier;
 import org.codapayments.router.instanceListSupplier.impl.ServiceInstanceListSupplierFactory;
+import org.codapayments.router.service.CircuitBreakerService;
+import org.codapayments.router.service.MetricService;
 import org.junit.jupiter.api.Test;
 
 import java.net.URI;
@@ -40,19 +41,24 @@ public class RoundRobinAlgorithmTests {
     public void testHappyPath() {
         var config = getRoutingConfig(RoutingAlgorithmType.ROUND_ROBIN);
         RoutingAlgorithm router = RoutingAlgorithmFactory.getInstance(config);
-        ServiceInstanceListSupplier supplier = ServiceInstanceListSupplierFactory.getInstance(config);
-        assert config.getInstances().get(0) == router.route(supplier);
-        assert config.getInstances().get(1) == router.route(supplier);
-        assert config.getInstances().get(2) == router.route(supplier);
-        assert config.getInstances().get(3) == router.route(supplier);
-        assert config.getInstances().get(0) == router.route(supplier);
+        MetricService metricService = new MetricService(config);
+        CircuitBreakerService circuitBreakerService = new CircuitBreakerService(config, metricService);
+        ServiceInstanceListSupplier supplier = ServiceInstanceListSupplierFactory.getInstance(config, circuitBreakerService);
+
+        assert config.getInstances().get(0) == router.chooseServiceInstance(supplier);
+        assert config.getInstances().get(1) == router.chooseServiceInstance(supplier);
+        assert config.getInstances().get(2) == router.chooseServiceInstance(supplier);
+        assert config.getInstances().get(3) == router.chooseServiceInstance(supplier);
+        assert config.getInstances().get(0) == router.chooseServiceInstance(supplier);
     }
 
     @Test
     public void testConcurrentRequests() throws ExecutionException, InterruptedException {
         var config = getRoutingConfig(RoutingAlgorithmType.ROUND_ROBIN);
         RoutingAlgorithm router = RoutingAlgorithmFactory.getInstance(config);
-        ServiceInstanceListSupplier supplier = ServiceInstanceListSupplierFactory.getInstance(config);
+        MetricService metricService = new MetricService(config);
+        CircuitBreakerService circuitBreakerService = new CircuitBreakerService(config, metricService);
+        ServiceInstanceListSupplier supplier = ServiceInstanceListSupplierFactory.getInstance(config, circuitBreakerService);
         ExecutorService executor = (ExecutorService) Executors.newFixedThreadPool(10);
 
         int numberOfTasks = config.getInstances().size() * 200;

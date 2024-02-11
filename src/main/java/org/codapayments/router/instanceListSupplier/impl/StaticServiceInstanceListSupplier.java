@@ -23,9 +23,4 @@ public class StaticServiceInstanceListSupplier implements ServiceInstanceListSup
     public void add(URI uri) {
 
     }
-
-    @Override
-    public void setCooldown(URI uri, Long timestamp) {
-
-    }
 }

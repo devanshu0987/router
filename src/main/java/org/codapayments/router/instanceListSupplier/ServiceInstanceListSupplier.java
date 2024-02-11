@@ -10,5 +10,4 @@ import java.util.List;
 public interface ServiceInstanceListSupplier {
     public List<URI> get();
     public void add(URI uri);
-    public void setCooldown(URI uri, Long timestamp);
 }

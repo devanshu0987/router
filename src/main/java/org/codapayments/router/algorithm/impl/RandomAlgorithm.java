@@ -15,7 +15,7 @@ public class RandomAlgorithm implements RoutingAlgorithm {
     }
 
     @Override
-    public URI route(ServiceInstanceListSupplier supplier) {
+    public URI chooseServiceInstance(ServiceInstanceListSupplier supplier) {
         // Todo: Is it possible that the underlying list changes in between calls, if we allow for updates?
         var instanceList = supplier.get();
         int size = instanceList.size();
