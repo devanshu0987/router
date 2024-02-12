@@ -15,6 +15,7 @@ public class MetricServiceTests {
         RoutingConfig config = TestConfig.getRoutingConfig(RoutingAlgorithmType.ROUND_ROBIN);
         MetricService metricService = new MetricService(config);
         URI instanceURI = new URI("http://localhost:8080");
+        URI unknownInstanceURI = new URI("http://localhost:8086");
 
         // ACT
         metricService.addMetric(MetricType.SUCCESS_COUNT, instanceURI, 1D);
@@ -28,6 +29,8 @@ public class MetricServiceTests {
         // ASSERT
         assert metricService.getMetric(MetricType.SUCCESS_COUNT, instanceURI) == 3D;
         assert metricService.getMetric(MetricType.LATENCY_AVERAGE, instanceURI) == 10D;
+
+        assert metricService.getMetric(MetricType.LATENCY_AVERAGE, unknownInstanceURI) == 0D;
     }
 
     @Test
@@ -56,7 +59,5 @@ public class MetricServiceTests {
         // ASSERT
         assert metricService.getMetric(MetricType.SUCCESS_COUNT, instanceURI) == 0D;
         assert metricService.getMetric(MetricType.LATENCY_AVERAGE, instanceURI) == 0D;
-
-
     }
 }

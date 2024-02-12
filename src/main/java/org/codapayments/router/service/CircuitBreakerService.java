@@ -34,7 +34,8 @@ public class CircuitBreakerService {
         if (metricService.getMetric(MetricType.ERROR_COUNT, redirectURI) > routingConfig.getErrorCountForCooldown()
                 || metricService.getMetric(MetricType.LATENCY_AVERAGE, redirectURI) > 1000 * routingConfig.getLatencyForCooldownInSeconds()) {
             // take the instance out for timeout configured in the config.
-            setCoolDown(redirectURI, currentTimestamp + (routingConfig.getCooldownTimeoutInSeconds() * 1000));
+            nextValidTimestamp = currentTimestamp + (routingConfig.getCooldownTimeoutInSeconds() * 1000);
+            setCoolDown(redirectURI, nextValidTimestamp);
             return false;
         }
 
@@ -43,10 +44,6 @@ public class CircuitBreakerService {
 
     // Setting CoolDown takes the instance out of the serviceInstance list if the supplier implements that functionality.
     private static void setCoolDown(URI uri, Long timestamp) {
-        coolDowns.compute(uri, (k, v) -> {
-            if (v == null)
-                return System.currentTimeMillis();
-            return timestamp;
-        });
+        coolDowns.compute(uri, (k, v) -> timestamp);
     }
 }
