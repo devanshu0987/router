@@ -23,7 +23,9 @@ public class MetricStatistics {
     public void addData(URI uri, Long timestamp, Double value) {
         data.compute(uri, (k, v) -> {
             if (v == null) {
-                return StatisticsFactory.getInstance(metricType, config);
+                Statistics instance = StatisticsFactory.getInstance(metricType, config);
+                instance.addData(new DataPoint(timestamp, value));
+                return instance;
             } else {
                 v.addData(new DataPoint(timestamp, value));
             }
