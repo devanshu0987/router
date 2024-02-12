@@ -16,7 +16,8 @@
 ## Feature Scope
 - Only 2 routing algos are supported: `RANDOM` and `ROUND_ROBIN` routing.
 - Static List of service instances.
-- No provision to update the list in runtime.
+- Cool down facility is implemented where in the failed instance will not get a request for certain time period.
+- No provision to update the list at runtime.
 
 ## Design
 - The Router assumes a `Static List` of downstream service instances provided to the application via `application.properties` file.
