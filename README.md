@@ -16,6 +16,7 @@
 ## Feature Scope
 - Only 2 routing algos are supported: `RANDOM` and `ROUND_ROBIN` routing.
 - Static List of service instances.
+- No provision to update the list in runtime.
 
 ## Design
 - The Router assumes a `Static List` of downstream service instances provided to the application via `application.properties` file.
@@ -31,7 +32,8 @@
     - `StaticServiceInstanceListSupplier` : It returns a static list of service instances.
     - `StaticServiceInstanceWithCoolDownListSupplier` : It returns a filtered list of service instances which are not in cooldown.
       - `CircuitBreakerService` maintains metrics for the instances and can mark an instance to be in cooldown.
-      - Cooldown means, the instance will be not provided to the Routing algorithm.
+      - Cooldown means, the instance will be not be made available to the Routing algorithm.
+      - Helps in routing requests to other instances in case of error or high latency.
   - The interface is generic enough that other schemes can be implemented.
 - `MetricService` maintains a set of statistics about ErrorCount, SuccessCount and Latency.
   - They can be used to take actions in case of Downstream API failure or slowness.
@@ -54,11 +56,22 @@
 ## How would the service behave if downstream instance goes down/slows down.
 - Every request we send to the failed downstream service will fail.
 - On the service end, we will update the metrics and increment error counts.
-- On subsequent calls, the metrics will keep on accumulating and it will cross the threshold set.
+- On subsequent calls, the metrics will keep on accumulating. It will cross the threshold set.
 - On the next call, the Supplier will filter out the service instance because the function `isCircuitClosed` will return false.
 - In this way, the instance will not get selected for the next `N` seconds.
 - Overtime, the Sliding window metrics will reduce as the time passes and once again we will select the instance.
 - If the request passes, we update the metrics accordingly and the processing will continue.
+
+## Folder Structure
+- `algorithm` : Stores Routing algorithms implementation.
+- `config` : Config classes.
+- `controller`
+- `service` : Stores domain logic in terms of Routing, Metrics accumulation and Error Handling.
+- `serviceInstanceListSupplier` : Stores supplier list implementations.
+- `statistics` : Classes used by Metric service.
+
+## Entry Point
+- `controller` folder.
 
 ## Interactions
 [Image](Interactions.png)

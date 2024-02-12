@@ -19,7 +19,7 @@ public class CircuitBreakerService {
         coolDowns = new ConcurrentHashMap<>();
     }
 
-    // If circuit is closed, it means, request can pass.
+    // If circuit is closed, it means, request can pass based on the metrics gathered till now.
     public boolean isCircuitClosed(URI redirectURI) {
 
         Long currentTimestamp = System.currentTimeMillis();
@@ -37,6 +37,7 @@ public class CircuitBreakerService {
         return false;
     }
 
+    // Setting CoolDown takes the instance out of the serviceInstance list if the supplier implements that functionality.
     private static void setCoolDown(URI uri, Long timestamp) {
         coolDowns.compute(uri, (k, v) -> {
             if (v == null)

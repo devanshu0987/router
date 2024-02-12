@@ -37,7 +37,6 @@ public class RouterController {
     @PostMapping(value = "/**", consumes = "application/json", produces = "application/json")
     public ResponseEntity<ObjectNode> index(RequestEntity<ObjectNode> req) {
 
-        // validate req body.
         var response = routingService.route(req, restTemplate);
         return response;
     }
