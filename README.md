@@ -55,10 +55,10 @@
 
 ## How would the service behave if downstream instance goes down/slows down.
 - Every request we send to the failed downstream service will fail.
-- On the service end, we will update the metrics and increment error counts.
+- On the routing API end, we will update the metrics and increment error counts.
 - On subsequent calls, the metrics will keep on accumulating. It will cross the threshold set.
 - On the next call, the Supplier will filter out the service instance because the function `isCircuitClosed` will return false.
-- In this way, the instance will not get selected for the next `N` seconds.
+- In this way, the instance will not get selected for the next `N` seconds as set in the configuration.
 - Overtime, the Sliding window metrics will reduce as the time passes and once again we will select the instance.
 - If the request passes, we update the metrics accordingly and the processing will continue.
 
