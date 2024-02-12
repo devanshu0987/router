@@ -28,7 +28,7 @@ public class RoutingServiceTests {
     private RestTemplate restTemplate;
 
     @Test
-    public void testHappyPath() throws URISyntaxException {
+    public void testOneValidPayload() throws URISyntaxException {
         var config = TestConfig.getRoutingConfig(RoutingAlgorithmType.ROUND_ROBIN);
         MetricService metricService = new MetricService(config);
         RoutingService service = new RoutingService(config, metricService);
