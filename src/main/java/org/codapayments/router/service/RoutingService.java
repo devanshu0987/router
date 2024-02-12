@@ -14,7 +14,6 @@ import org.springframework.web.client.RestTemplate;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Objects;
 
 public class RoutingService {
 
@@ -40,35 +39,39 @@ public class RoutingService {
             return new ResponseEntity<>(null, null, HttpStatus.SERVICE_UNAVAILABLE);
         }
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("Location", redirectURI.toString());
+        HttpHeaders responseHeaders = new HttpHeaders();
+        responseHeaders.add("Location", redirectURI.toString());
 
+        // Check if we are allowed to call the downstream service instance.
         if (!circuitBreakerService.isCircuitClosed(redirectURI)) {
             // Todo: Either we just return OR we retry. For now, just return.
-            return new ResponseEntity<>(null, headers, HttpStatus.SERVICE_UNAVAILABLE);
+            return new ResponseEntity<>(null, responseHeaders, HttpStatus.SERVICE_UNAVAILABLE);
         }
 
         URI downstreamURI = prepareDownstreamURI(req, redirectURI);
         long beforeTime = System.currentTimeMillis();
 
         try {
+            // Call downstream service.
             HttpEntity<ObjectNode> downstreamRequest = new HttpEntity<>(req.getBody());
             ResponseEntity<ObjectNode> resp = restTemplate.postForEntity(downstreamURI, downstreamRequest, ObjectNode.class);
-            HttpHeaders responseHeaders = prepareResponseHeaders(resp, headers);
+            HttpHeaders updatedResponseHeaders = prepareResponseHeaders(resp, responseHeaders);
+
+            // Evaluate response.
             if (resp.getStatusCode().is2xxSuccessful()) {
                 metricService.addMetric(MetricType.SUCCESS_COUNT, redirectURI, 1D);
             }
             metricService.addMetric(MetricType.LATENCY_AVERAGE, redirectURI, (System.currentTimeMillis() - beforeTime) * 1D);
-            return new ResponseEntity<>(resp.getBody(), responseHeaders, HttpStatus.OK);
+            return new ResponseEntity<>(resp.getBody(), updatedResponseHeaders, HttpStatus.OK);
         } catch (HttpClientErrorException ex) {
-            return new ResponseEntity<>(null, headers, ex.getStatusCode());
+            return new ResponseEntity<>(null, responseHeaders, ex.getStatusCode());
         } catch (HttpServerErrorException ex) {
             metricService.addMetric(MetricType.ERROR_COUNT, redirectURI, 1D);
-            return new ResponseEntity<>(null, headers, ex.getStatusCode());
+            return new ResponseEntity<>(null, responseHeaders, ex.getStatusCode());
         } catch (Exception ex) {
             metricService.addMetric(MetricType.ERROR_COUNT, redirectURI, 1D);
         }
-        return new ResponseEntity<>(null, headers, HttpStatus.SERVICE_UNAVAILABLE);
+        return new ResponseEntity<>(null, responseHeaders, HttpStatus.SERVICE_UNAVAILABLE);
     }
 
     private URI prepareDownstreamURI(RequestEntity<ObjectNode> req, URI redirectURI) {
