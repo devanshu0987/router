@@ -24,6 +24,12 @@ public class CircuitBreakerService {
 
         Long currentTimestamp = System.currentTimeMillis();
 
+        // Validate if the downstream instance is already in cooldown.
+        var nextValidTimestamp = coolDowns.getOrDefault(redirectURI, currentTimestamp - 1000);
+
+        if (currentTimestamp.compareTo(nextValidTimestamp) < 0)
+            return false;
+
         // Business rules, if we should put a downstream instance in cooldown.
         if (metricService.getMetric(MetricType.ERROR_COUNT, redirectURI) > routingConfig.getErrorCountForCooldown()
                 || metricService.getMetric(MetricType.LATENCY_AVERAGE, redirectURI) > 1000 * routingConfig.getLatencyForCooldownInSeconds()) {
@@ -32,11 +38,7 @@ public class CircuitBreakerService {
             return false;
         }
 
-        // Validate if the downstream instance is already in cooldown.
-        var nextValidTimestamp = coolDowns.getOrDefault(redirectURI, currentTimestamp - 1000);
-        if (currentTimestamp.compareTo(nextValidTimestamp) > 0)
-            return true;
-        return false;
+        return true;
     }
 
     // Setting CoolDown takes the instance out of the serviceInstance list if the supplier implements that functionality.
