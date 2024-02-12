@@ -30,6 +30,7 @@ public class RoundRobinAlgorithmTests {
         CircuitBreakerService circuitBreakerService = new CircuitBreakerService(config, metricService);
         ServiceInstanceListSupplier supplier = ServiceInstanceListSupplierFactory.getInstance(config, circuitBreakerService);
 
+        // asserts the order in which subsequent calls return the instances.
         assert config.getInstances().get(0) == router.chooseServiceInstance(supplier);
         assert config.getInstances().get(1) == router.chooseServiceInstance(supplier);
         assert config.getInstances().get(2) == router.chooseServiceInstance(supplier);

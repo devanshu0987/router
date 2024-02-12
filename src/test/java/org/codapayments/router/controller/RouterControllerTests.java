@@ -45,7 +45,7 @@ class RouterControllerTests {
     private RestTemplate restTemplate;
 
     @Test
-    void testHappyPath() throws Exception {
+    void testOneValidPayload() throws Exception {
         var mockMvc = MockMvcBuilders.webAppContextSetup(wac).build();
         RouterController controller = mockMvc.getDispatcherServlet().getWebApplicationContext().getBean(RouterController.class);
         controller.initialize();
