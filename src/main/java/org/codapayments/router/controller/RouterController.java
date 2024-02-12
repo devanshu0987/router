@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.annotation.PostConstruct;
 import org.codapayments.router.config.RoutingConfig;
+import org.codapayments.router.service.CircuitBreakerService;
 import org.codapayments.router.service.MetricService;
 import org.codapayments.router.service.RoutingService;
 import org.codapayments.router.statistics.MetricType;
@@ -26,11 +27,13 @@ public class RouterController {
     private static final Logger logger = LoggerFactory.getLogger(RouterController.class);
     private RoutingService routingService;
     private MetricService metricService;
+    private CircuitBreakerService circuitBreakerService;
 
     @PostConstruct
     public void initialize() {
-        metricService = new MetricService(routingConfig);
-        routingService = new RoutingService(routingConfig, metricService);
+        this.metricService = new MetricService(routingConfig);
+        this.circuitBreakerService = new CircuitBreakerService(routingConfig, metricService);
+        this.routingService = new RoutingService(routingConfig, metricService, circuitBreakerService);
     }
 
     // We should get any request and then try to pass it onto the downstream.
@@ -48,6 +51,7 @@ public class RouterController {
         ArrayNode successArray = mapper.createArrayNode();
         ArrayNode errorArray = mapper.createArrayNode();
         ArrayNode latencyArray = mapper.createArrayNode();
+        ArrayNode cooldownArray = mapper.createArrayNode();
 
         for (var item : routingConfig.getInstances()) {
             successArray.add(item + " " + metricService.getMetric(MetricType.SUCCESS_COUNT, item));
@@ -58,9 +62,13 @@ public class RouterController {
         for (var item : routingConfig.getInstances()) {
             latencyArray.add(item + " " + metricService.getMetric(MetricType.LATENCY_AVERAGE, item));
         }
+        for(var item : routingConfig.getInstances()) {
+            cooldownArray.add(item + " " + !circuitBreakerService.isCircuitClosed(item));
+        }
         rootNode.put("SUCCESS_COUNT", successArray);
         rootNode.put("ERROR_COUNT", errorArray);
         rootNode.put("LATENCY", latencyArray);
+        rootNode.put("COOLDOWNS", cooldownArray);
 
         return rootNode;
     }

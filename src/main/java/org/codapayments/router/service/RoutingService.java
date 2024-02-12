@@ -22,11 +22,11 @@ public class RoutingService {
     private CircuitBreakerService circuitBreakerService;
     private MetricService metricService;
 
-    public RoutingService(RoutingConfig routingConfig, MetricService metricService) {
+    public RoutingService(RoutingConfig routingConfig, MetricService metricService, CircuitBreakerService circuitBreakerService) {
         this.routingAlgorithm = RoutingAlgorithmFactory.getInstance(routingConfig);
         this.metricService = metricService;
 
-        circuitBreakerService = new CircuitBreakerService(routingConfig, metricService);
+        this.circuitBreakerService = circuitBreakerService;
         this.supplier = ServiceInstanceListSupplierFactory.getInstance(routingConfig, circuitBreakerService);
     }
 

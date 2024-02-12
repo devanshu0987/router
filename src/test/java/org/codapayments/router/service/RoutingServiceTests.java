@@ -33,7 +33,8 @@ public class RoutingServiceTests {
     public void testOneValidPayload() throws URISyntaxException {
         var config = TestConfig.getRoutingConfig(RoutingAlgorithmType.ROUND_ROBIN);
         MetricService metricService = new MetricService(config);
-        RoutingService service = new RoutingService(config, metricService);
+        CircuitBreakerService circuitBreakerService = new CircuitBreakerService(config, metricService);
+        RoutingService service = new RoutingService(config, metricService, circuitBreakerService);
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode root = mapper.createObjectNode();
 
@@ -57,7 +58,8 @@ public class RoutingServiceTests {
         config.setMetricsWindowSizeInSeconds(30);
 
         MetricService metricService = new MetricService(config);
-        RoutingService service = new RoutingService(config, metricService);
+        CircuitBreakerService circuitBreakerService = new CircuitBreakerService(config, metricService);
+        RoutingService service = new RoutingService(config, metricService, circuitBreakerService);
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode root = mapper.createObjectNode();
 
@@ -82,7 +84,8 @@ public class RoutingServiceTests {
         config.setMetricsWindowSizeInSeconds(30);
 
         MetricService metricService = new MetricService(config);
-        RoutingService service = new RoutingService(config, metricService);
+        CircuitBreakerService circuitBreakerService = new CircuitBreakerService(config, metricService);
+        RoutingService service = new RoutingService(config, metricService, circuitBreakerService);
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode root = mapper.createObjectNode();
 
