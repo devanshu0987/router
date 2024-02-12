@@ -67,8 +67,8 @@ public class CircuitBreakerServiceTests {
         RoutingConfig config = TestConfig.getRoutingConfig(RoutingAlgorithmType.ROUND_ROBIN);
         config.setErrorCountForCooldown(20);
         config.setLatencyForCooldownInSeconds(5);
-        config.setCooldownTimeoutInSeconds(3);
-        config.setMetricsWindowSizeInSeconds(1);
+        config.setCooldownTimeoutInSeconds(5);
+        config.setMetricsWindowSizeInSeconds(5);
 
         MetricService metricService = new MetricService(config);
         CircuitBreakerService circuitBreakerService = new CircuitBreakerService(config, metricService);
@@ -77,6 +77,7 @@ public class CircuitBreakerServiceTests {
         metricService.addMetric(MetricType.ERROR_COUNT, instanceURI, 100D);
         metricService.addMetric(MetricType.LATENCY_AVERAGE, instanceURI, (double) (10 * 1000));
 
+        // Initiate cooldown.
         boolean status = circuitBreakerService.isCircuitClosed(instanceURI);
         assert !status;
 
